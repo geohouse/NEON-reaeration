@@ -57,7 +57,7 @@ plot(outputDF$meanQ,outputDF$lossRateSF6, col = "blue", type = "p", pch = 16)
 plot(outputDF$meanQ,outputDF$k600, col = "blue", type = "p", pch = 16)
 plot(outputDF$meanQ,outputDF$velocity, col = "blue", type = "p", pch = 16)
 plot(outputDF$meanQ,outputDF$meanDepth, col = "blue", type = "p", pch = 16)
-
+plot(outputDF$meanQ,outputDF$meanWettedWidth, col = "blue", type = "p", pch = 16)
 
 #Calculate travel time for BLUE for engineering design analysis
 dataDir <- "API"
