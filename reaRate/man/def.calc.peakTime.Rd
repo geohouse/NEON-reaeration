@@ -24,7 +24,7 @@ calculating travel time between an upstream and downstream sensor set.
 \examples{
 #Using an example file
 #travelTime <- def.calc.travelTime(
-#dataDir = paste(path.package("reaRate"),"inst\\\\extdata", sep = "\\\\"), 
+#dataDir = paste(path.package("reaRate"),"inst\\extdata", sep = "\\"), 
 #currEventID = "GUIL.20150129", injectionType = "constant", bPlot = T)
 }
 \references{
