@@ -55,7 +55,7 @@ def.data.resolveDupes <- function(
 
       # If there are duplicates, keep the most recent measurement (assumes it's a re-run with
       # an accurate measurement value)
-      if(dupSampleNames != ""){
+      if(length(dupSampleNames) > 1){
 
         # Make a new column of the analysis date and sort the whole d.f. descending based on that.
         externalData$analysisDate_forSort <- as.POSIXct(externalData$analysisDate)

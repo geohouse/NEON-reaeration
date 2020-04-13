@@ -19,6 +19,8 @@
 #' "API" to pull data from the NEON API [string]
 #' @param site User identifies the site(s), defaults to "all" [string]
 #' @param fieldQ specifies whether or no field discharge data should be included [boolean]
+#' @param filepath specifies the path to the downloaded and stacked rea data tables (DP1.20190.001) [string]
+#' @param qFilepath specifies the path to the downloaded and stacked discharge data tables (DP1.20048.001) [string]
 
 #' @return This function returns one data frame formatted for use with def.calc.reaeration.R
 
@@ -53,47 +55,17 @@
 def.format.reaeration <- function(
   dataDir = paste0(getwd(),"/NEON_reaeration.zip"),
   site = "all",
-  fieldQ = FALSE
+  fieldQ = FALSE,
+  filepath = "",
+  qFilepath = ""
 ) {
 
-  reaDPID <- "DP1.20190.001"
-  qDPID <- "DP1.20048.001"
-  folder <- FALSE
-  #Pull files from the API to stack
-  if(dataDir == "API"&&!dir.exists(paste(getwd(), "/filesToStack", substr(reaDPID, 5, 9), sep=""))){
-    dataFromAPI <- zipsByProduct(reaDPID,site,package="expanded",check.size=TRUE)
-    if(fieldQ){
-      fieldQAPI <- zipsByProduct(qDPID,site,package="basic",check.size=TRUE)
-    }
+  if(filepath == ""){
+    stop("No entry provided for 'filepath' within def.format.reaeration. Exiting.")
   }
 
-  if(dataDir == "API"){
-    filepath <- paste(getwd(), "/filesToStack", substr(reaDPID, 5, 9), sep="")
-    qFilepath <- paste(getwd(), "/filesToStack", substr(qDPID, 5, 9), sep="")
-    folder <- TRUE
-  } else{
-    filepath = dataDir
-    qFilepath = dataDir
-  }
-
-  #Stack field and external lab data
-  if(!dir.exists(paste(gsub("\\.zip","",filepath), "/stackedFiles", sep = "/"))&&
-     file.exists(filepath)){
-    stackByTable(dpID=reaDPID,filepath=filepath,folder=folder)
-    filepath <- paste(gsub("\\.zip","",filepath), "stackedFiles", sep = "/")
-  }
-
-  #Stack discharge files if needed
-  if(!dir.exists(paste(gsub("\\.zip","",qFilepath), "/stackedFiles", sep = "/"))&&
-     file.exists(qFilepath)&&
-     fieldQ){
-    stackByTable(dpID=qDPID,filepath=qFilepath,folder=TRUE)
-    qFilepath <- paste(gsub("\\.zip","",qFilepath), "stackedFiles", sep = "/")
-  }else if(dir.exists(paste(gsub("\\.zip","",filepath), "/stackedFiles", sep = "/"))){
-    filepath <- paste(gsub("\\.zip","",filepath), "stackedFiles", sep = "/")
-    if(fieldQ){
-      qFilepath <- paste(gsub("\\.zip","",qFilepath), "stackedFiles", sep = "/")
-    }
+  if(qFilepath == ""){
+    stop("No entry provided for 'qFilepath' within def.format.reaeration. Exiting.")
   }
 
   #Read in stacked files
@@ -206,10 +178,23 @@ def.format.reaeration <- function(
   #Remove data for model type injections
   outputDF <- outputDF[outputDF$injectionType!="model"&!is.na(outputDF$injectionType),]
 
+  def.data.resolveDupes(filepath = filepath, table = "externalLabDataSalt")
+
   QFile <- def.format.Q(dataDir = dataDir, site = site)
   QFile <- def.calc.Q.inj(QFile)
   #Move the slug calculations for Q to peakTime so that users only have to click on the plots once
   #QFile <- def.calc.Q.slug(inputFile = QFile, dataDir = filepath)
+
+  #Read in stacked field discharge data
+  if(fieldQ&&dir.exists(qFilepath)){
+    #Read in stacked data
+    dsc_fieldData <- read.csv(
+      paste(qFilepath,"dsc_fieldData.csv", sep = "/"),
+      stringsAsFactors = F)
+    dsc_fieldData$eventID <- paste(dsc_fieldData$siteID,gsub("-","",substr(dsc_fieldData$startDate,1,10)),sep = ".")
+  } else{
+    stop("Error, stacked discharge files could not be read in reaeration data")
+  }
 
   if(fieldQ){
     for(i in unique(outputDF$eventID)){
