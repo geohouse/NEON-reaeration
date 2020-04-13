@@ -1,6 +1,7 @@
 
 library(devtools)
 library(roxygen2)
+library(plotly)
 
 setwd("~/GitHub/NEON-reaeration")
 #setwd("C:/Users/Kaelin/Documents/GitHub/biogeochemistryIPT/reaeration/Science Only/rCodeForRelease")
@@ -76,6 +77,34 @@ reaRatesCalc <- def.calc.reaeration(inputFile = reaFormatted,
 
 outputDF <- reaRatesCalc$outputDF
 inputFile <- reaRatesCalc$inputFile
+
+fig_test <- highlight_key(outputDF)
+
+fig_1 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ travelTime, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "Travel time")
+
+
+fig_2 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ lossRateSF6, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "SF6 loss rate")
+
+fig_3 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ travelTime, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "Travel time")
+
+fig_4 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ k600, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "K600")
+
+fig_5 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ velocity, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "Mean velocity")
+
+fig_6 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ meanDepth, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "Mean depth")
+
+# The margin arg squeezes the middle column from both directions. Need to offset this by making that column wider (there's apparently
+# no cleaner way to do this)
+fig <- subplot(fig_1, fig_2, fig_3, fig_4, fig_5, fig_6, nrows = 2, titleY = TRUE, margin = c(0.1,0.1,0.05,0.05), widths = c(0.3, 0.4, 0.3))
+
+fig
+
 
 par(mfrow=c(2,3))
 plot(outputDF$meanQ,outputDF$travelTime, col = "blue", type = "p", pch = 16, cex = 4, cex.axis = 1.25)
