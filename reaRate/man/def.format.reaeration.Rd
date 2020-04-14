@@ -9,7 +9,8 @@ def.format.reaeration(
   site = "all",
   fieldQ = FALSE,
   filepath = "",
-  qFilepath = ""
+  qFilepath = "",
+  variablesFile = ""
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ def.format.reaeration(
 \item{filepath}{specifies the path to the downloaded and stacked rea data tables (DP1.20190.001) [string]}
 
 \item{qFilepath}{specifies the path to the downloaded and stacked discharge data tables (DP1.20048.001) [string]}
+
+\item{variablesFile}{TEMP. needed until primary key info. avail. in variables.csv public download. A downloaded pub workbook.}
 }
 \value{
 This function returns one data frame formatted for use with def.calc.reaeration.R

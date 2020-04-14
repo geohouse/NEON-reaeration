@@ -4,19 +4,32 @@
 \alias{def.data.resolveDupes}
 \title{Resolves duplicate lab analysis results - multiple results for the same sample name}
 \usage{
-def.data.resolveDupes(filepath = "", tableName = "")
+def.data.resolveDupes(
+  filepath = "",
+  tableName = "",
+  pubTableName = "",
+  variablesFile = ""
+)
 }
 \arguments{
 \item{filepath}{The path to the directory containing the lab data to de-duplicate [string]}
 
 \item{tableName}{The name of the table in the file path directory to de-duplicate [string]}
+
+\item{pubTableName}{The name of the publication table to use to define the pub. table to use to define the primary keys used for de-duping [string]}
+
+\item{variablesFile}{a pub notebook read-in - temporary [data.frame]}
 }
 \value{
-This function returns one data frame formatted for use with def.calc.reaeration.R
+This function returns nothing. The de-duplicated version of the tableName overwrites the original
+version and is then used for all downstream processing.
 }
 \description{
-This includes multiple user-selectable options for resolving duplicate lab
-samples: 1) keeping the most recent measurement for each duplicate sample.
+This first runs the removeDups function in the neonOSbase package to remove duplicates
+when possible, and to flag those that are not exactly identical. Then for any remaining, flagged
+duplicates, this includes multiple user-selectable options for resolving duplicate lab
+samples: 1) keeping the most recent measurement for each duplicate sample, 2) NEEDS DEVELOPMENT -
+keeping samples only most similar to other measured values for the same location and sampling time.
 }
 \examples{
 def.data.resolveDupes(filepath = "GitHub/NEON-reaeration/filesToStack20190/stackedFiles", tableName = "externalLabDataSalt")

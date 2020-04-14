@@ -4,15 +4,22 @@
 #' @author
 #' Geoffrey L. House \email{housegl@battelleecology.org} \cr
 
-#' @description This includes multiple user-selectable options for resolving duplicate lab
-#' samples: 1) keeping the most recent measurement for each duplicate sample.
+#' @description This first runs the removeDups function in the neonOSbase package to remove duplicates
+#' when possible, and to flag those that are not exactly identical. Then for any remaining, flagged
+#' duplicates, this includes multiple user-selectable options for resolving duplicate lab
+#' samples: 1) keeping the most recent measurement for each duplicate sample, 2) NEEDS DEVELOPMENT -
+#' keeping samples only most similar to other measured values for the same location and sampling time.
 #'
 #' @importFrom utils read.csv
+#' @importFrom neonOSbase removeDups
 
 #' @param filepath The path to the directory containing the lab data to de-duplicate [string]
 #' @param tableName The name of the table in the file path directory to de-duplicate [string]
+#' @param pubTableName The name of the publication table to use to define the pub. table to use to define the primary keys used for de-duping [string]
+#' @param variablesFile a pub notebook read-in - temporary [data.frame]
 
-#' @return This function returns one data frame formatted for use with def.calc.reaeration.R
+#' @return This function returns nothing. The de-duplicated version of the tableName overwrites the original
+#' version and is then used for all downstream processing.
 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -28,12 +35,17 @@
 ##############################################################################################
 def.data.resolveDupes <- function(
   filepath = "",
-  tableName = ""
+  tableName = "",
+  pubTableName = "",
+  variablesFile = ""
 ) {
 
   ## For testing only
   filepath = "~/GitHub/NEON-reaeration/filesToStack20190/stackedFiles"
   tableName = "externalLabDataSalt"
+  # Download the pub notebook
+  variablesFile <- restR::get.pub.workbook(DPID = "DP1.20190.001", stack = "prod", table = "rea_externalLabDataSalt_pub")
+
 
   if(filepath == ""){
     stop("No entry provided for 'filepath' within def.data.resolveDupes. Exiting.")
@@ -41,6 +53,14 @@ def.data.resolveDupes <- function(
 
   if(tableName == ""){
     stop("No entry provided for 'tableName' within def.data.resolveDupes. Exiting.")
+  }
+
+  if(pubTableName == ""){
+    stop("No entry provided for 'pubTableName' within def.data.resolveDupes. Exiting.")
+  }
+
+  if(class(variablesFile) == "character"){
+    stop("No entry provided for 'variablesFile' within def.data.resolveDupes. Exiting.")
   }
 
   if (dir.exists(filepath)) {
@@ -51,23 +71,48 @@ def.data.resolveDupes <- function(
       extFile <- allFiles[grepl(tableName, allFiles)]
       externalData <- read.csv(file.path(filepath, extFile), stringsAsFactors = F)
 
-      dupSampleNames <- unique(externalData$saltSampleID[duplicated(externalData$saltSampleID)])
+      ## Re-try after re-transitions - fields that are missing in the inputData compared to the pub notebook.
+      missingFields <- setdiff(variablesFile$fieldName, names(externalData))
 
-      # If there are duplicates, keep the most recent measurement (assumes it's a re-run with
-      # an accurate measurement value)
-      if(length(dupSampleNames) > 1){
+      #print("the missing fields are:")
+      #print(missingFields)
 
+      # Fails initially with
+      # Error in neonOSbase::removeDups(data = inputData, variables = pubNotebook,  :
+      # Field names in data do not match variables file.
+      # test <- neonOSbase::removeDups(data = inputData, variables = pubNotebook, table = "rea_externalLabDataSalt_pub")
+
+      # remove the rows in the pub notebook that contain the field names missing from the inputData.
+      variablesFile_dropMissingInData <- variablesFile[!(variablesFile$fieldName %in% missingFields),]
+
+      # Need to remove the publication date column from the inputData so that all the fields match with the pub notebook.
+      externalData_v2 <- externalData[,names(externalData) != "publicationDate"]
+
+      dataAfterDupeFlag <- neonOSbase::removeDups(data = externalData_v2, variables = variablesFile_dropMissingInData, table = pubTableName)
+
+      numDupesRemaining <- sum(dataAfterDupeFlag$duplicateRecordQF == 2)
+
+      # If there are duplicates still, decide how to handle them.
+      if(numDupesRemaining > 1){
+
+        # Keep the most recent measurement (assumes it's a re-run with
+        # an accurate measurement value)
+        ## ============
         # Make a new column of the analysis date and sort the whole d.f. descending based on that.
-        externalData$analysisDate_forSort <- as.POSIXct(externalData$analysisDate)
-        externalData_dateSorted <- externalData[order(externalData$analysisDate_forSort, decreasing = TRUE),]
+        dataAfterDupeFlag$analysisDate_forSort <- as.POSIXct(dataAfterDupeFlag$analysisDate)
+        dataAfterDupeFlag_dateSorted <- dataAfterDupeFlag[order(dataAfterDupeFlag$analysisDate_forSort, decreasing = TRUE),]
         # Now remove the duplicates this will remove all but the most recent measurement (because the d.f. is sorted by analysis date)
-        externalData_noDupes <- externalData_dateSorted[!duplicated(externalData_dateSorted$saltSampleID),]
+        externalData_noDupes <- dataAfterDupeFlag_dateSorted[!duplicated(dataAfterDupeFlag_dateSorted$saltSampleID),]
+        ## =============
+
 
         # Overwrite the raw data with a version that doesn't have duplicate samples.
-        write.csv(externalData_noDupes, file = file.path(filepath, extFile), append = FALSE)
+        write.csv(externalData_noDupes, file = file.path(filepath, extFile))
 
-        print(paste0(length(dupSampleNames), " duplicate sample names removed"))
+        print(paste0((numDupesRemaining / 2), " duplicate sample names removed"))
+
       }
+
     } else{
       stop(paste0("Error, the table named: ", tableName, " does not exist (or more than one matching file name) in file path: ", filepath, " (attempted access from function def.data.resolveDupes.R) Exiting."))
     }

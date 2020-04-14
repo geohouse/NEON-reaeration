@@ -57,8 +57,19 @@ site <- "CARI" # Works well! Looks like just has salt slug drop. Very steep peak
 # use with def.format.reaeration to access the correct files after download.
 reaDownloaded <- def.data.download(dataDir = dataDir, site = site, fieldQ = TRUE)
 
+
+# def.format.reaeration also runs def.format.Q, on the external lab salt concentration measurements, which can't have any duplicate entries.
+# The de-dupe function currently requires the publication workbook for the table in order to determine which columns are part of the primary key
+# and which ones aren't. Download that here, and provide as an input argument (per Claire 041320, will soon change so the variables.csv from the
+# portal download will have that information instead, and can therefore code the check internally without the extra variable being needed to pass to the function)
+
+# Download the pub notebook
+pubNotebook <- restR::get.pub.workbook(DPID = "DP1.20190.001", stack = "prod", table = "rea_externalLabDataSalt_pub")
+
 # The fieldQ also downloads the stream discharge data.
-reaFormatted <- def.format.reaeration(dataDir = dataDir, site = site, fieldQ = TRUE, filepath = reaDownloaded[1], qFilepath = reaDownloaded[2])
+reaFormatted <- def.format.reaeration(dataDir = dataDir, site = site, fieldQ = TRUE,
+                                      filepath = reaDownloaded[1], qFilepath = reaDownloaded[2],
+                                      variablesFile = pubNotebook)
 #write.csv(reaFormatted, "C:/Users/kcawley/Documents/GitHub/biogeochemistryIPT/reaeration/Science Only/rCodeForRelease/reaRate/inst/extdata/reaTestData.csv", row.names = F)
 #write.csv(condDataS1, "C:/Users/kcawley/Documents/GitHub/biogeochemistryIPT/reaeration/Science Only/rCodeForRelease/reaRate/inst/extdata/condDataS1.csv", row.names = F)
 
@@ -68,6 +79,9 @@ reaFormatted <- def.format.reaeration(dataDir = dataDir, site = site, fieldQ = T
 #                                     loggerFile = "rea_conductivityFieldData.csv",
 #                                     plot = TRUE,
 #                                     savePlotPath = "H:/Operations Optimization/savedPlots")
+
+
+# MAYF Error in plot.window(...) : need finite 'ylim' values
 
 reaRatesCalc <- def.calc.reaeration(inputFile = reaFormatted,
                                     dataDir = "~/GitHub/NEON-reaeration/filesToStack20190/stackedFiles/",
@@ -81,27 +95,27 @@ inputFile <- reaRatesCalc$inputFile
 fig_test <- highlight_key(outputDF)
 
 fig_1 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ travelTime, marker = list(pch = 16, cex = 4, col = "blue"),
-                 text = ~paste("EventID: ", eventID), name = "Travel time")
+                 text = ~paste("EventID: ", eventID), name = "Travel time") %>% layout(yaxis = list(title = "Travel time (s)"))
 
 
 fig_2 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ lossRateSF6, marker = list(pch = 16, cex = 4, col = "blue"),
-                 text = ~paste("EventID: ", eventID), name = "SF6 loss rate")
+                 text = ~paste("EventID: ", eventID), name = "SF6 loss rate") %>% layout(yaxis = list(title = "SF6 loss rate (1/m)"))
 
-fig_3 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ travelTime, marker = list(pch = 16, cex = 4, col = "blue"),
-                 text = ~paste("EventID: ", eventID), name = "Travel time")
+fig_3 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ k600, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "K600") %>% layout(yaxis = list(title = "K600"))
 
-fig_4 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ k600, marker = list(pch = 16, cex = 4, col = "blue"),
-                 text = ~paste("EventID: ", eventID), name = "K600")
+fig_4 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ velocity, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "Mean velocity") %>% layout(yaxis = list(title = "Mean velocity (m/s)"))
 
-fig_5 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ velocity, marker = list(pch = 16, cex = 4, col = "blue"),
-                 text = ~paste("EventID: ", eventID), name = "Mean velocity")
+fig_5 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ meanDepth, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "Mean depth") %>% layout(yaxis = list(title = "Mean depth (m)"))
 
-fig_6 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ meanDepth, marker = list(pch = 16, cex = 4, col = "blue"),
-                 text = ~paste("EventID: ", eventID), name = "Mean depth")
+fig_6 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ meanWettedWidth, marker = list(pch = 16, cex = 4, col = "blue"),
+                 text = ~paste("EventID: ", eventID), name = "Mean wetted width") %>% layout(yaxis = list(title = "Mean wetted width (m)"))
 
 # The margin arg squeezes the middle column from both directions. Need to offset this by making that column wider (there's apparently
 # no cleaner way to do this)
-fig <- subplot(fig_1, fig_2, fig_3, fig_4, fig_5, fig_6, nrows = 2, titleY = TRUE, margin = c(0.1,0.1,0.05,0.05), widths = c(0.3, 0.4, 0.3))
+fig <- subplot(fig_1, fig_2, fig_3, fig_4, fig_5, fig_6, nrows = 2, titleY = TRUE, margin = c(0.1,0.1,0.05,0.05), widths = c(0.3, 0.4, 0.3)) %>% layout(title=site)
 
 fig
 
