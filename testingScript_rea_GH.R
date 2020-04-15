@@ -82,6 +82,8 @@ reaFormatted <- def.format.reaeration(dataDir = dataDir, site = site, fieldQ = T
 
 
 # MAYF Error in plot.window(...) : need finite 'ylim' values
+# BLDE Error in plot.window(...) : need finite 'ylim' values
+# COMO Works - mix of plateaus and slug peaks
 
 reaRatesCalc <- def.calc.reaeration(inputFile = reaFormatted,
                                     dataDir = "~/GitHub/NEON-reaeration/filesToStack20190/stackedFiles/",
@@ -92,7 +94,6 @@ reaRatesCalc <- def.calc.reaeration(inputFile = reaFormatted,
 outputDF <- reaRatesCalc$outputDF
 inputFile <- reaRatesCalc$inputFile
 
-fig_test <- highlight_key(outputDF)
 
 fig_1 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ travelTime, marker = list(pch = 16, cex = 4, col = "blue"),
                  text = ~paste("EventID: ", eventID), name = "Travel time") %>% layout(yaxis = list(title = "Travel time (s)"))
