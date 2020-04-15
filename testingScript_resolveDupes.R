@@ -96,6 +96,36 @@ def.data.resolveDupes <- function(
         ## =============
 
 
+        # Use the mean of the replicates for the same site as any of the duplicates
+        ## ============
+        # Get the sample names of the dupes
+        dupSampleNames <- dataAfterDupeFlag$saltSampleID[which(dataAfterDupeFlag$duplicateRecordQF == 2)]
+
+        # Loop through dupSampleNames to extract all other samples from the same date and site
+        calcRepSummary <- function(dupName){
+
+          dupStartDate <- unique(dataAfterDupeFlag$startDate[which(dataAfterDupeFlag$saltSampleID == dupName)])
+          dupNamedLocation <- unique(dataAfterDupeFlag$namedLocation[which(dataAfterDupeFlag$saltSampleID == dupName)])
+
+          subsetData <- dataAfterDupeFlag[dataAfterDupeFlag$startDate == dupStartDate & dataAfterDupeFlag$namedLocation == dupNamedLocation,]
+          # Remove the background sample
+          subsetData_noBackground <- subsetData[!grepl(pattern = ".B[[:digit:]]+", x = subsetData$saltSampleID),]
+
+          meanMeasure <- mean(subsetData_noBackground$finalConcentration)
+          sdMeasure <- sd(subsetData_noBackground$finalConcentration)
+
+        }
+
+        lapply(dupSampleNames, FUN = calcRepSummary)
+
+        # Make a new column of the analysis date and sort the whole d.f. descending based on that.
+        dataAfterDupeFlag$analysisDate_forSort <- as.POSIXct(dataAfterDupeFlag$analysisDate)
+        dataAfterDupeFlag_dateSorted <- dataAfterDupeFlag[order(dataAfterDupeFlag$analysisDate_forSort, decreasing = TRUE),]
+        # Now remove the duplicates this will remove all but the most recent measurement (because the d.f. is sorted by analysis date)
+        externalData_noDupes <- dataAfterDupeFlag_dateSorted[!duplicated(dataAfterDupeFlag_dateSorted$saltSampleID),]
+        ## =============
+
+
         # Overwrite the raw data with a version that doesn't have duplicate samples.
         write.csv(externalData_noDupes, file = file.path(filepath, extFile))
 

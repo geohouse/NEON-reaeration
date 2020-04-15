@@ -40,11 +40,11 @@ def.data.resolveDupes <- function(
   variablesFile = ""
 ) {
 
-  ## For testing only
-  filepath = "~/GitHub/NEON-reaeration/filesToStack20190/stackedFiles"
-  tableName = "externalLabDataSalt"
-  # Download the pub notebook
-  variablesFile <- restR::get.pub.workbook(DPID = "DP1.20190.001", stack = "prod", table = "rea_externalLabDataSalt_pub")
+  # ## For testing only
+  # filepath = "~/GitHub/NEON-reaeration/filesToStack20190/stackedFiles"
+  # tableName = "externalLabDataSalt"
+  # # Download the pub notebook
+  # variablesFile <- restR::get.pub.workbook(DPID = "DP1.20190.001", stack = "prod", table = "rea_externalLabDataSalt_pub")
 
 
   if(filepath == ""){
