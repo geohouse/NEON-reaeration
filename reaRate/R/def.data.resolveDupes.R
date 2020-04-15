@@ -18,8 +18,8 @@
 #' @param pubTableName The name of the publication table to use to define the pub. table to use to define the primary keys used for de-duping [string]
 #' @param variablesFile a pub notebook read-in - temporary [data.frame]
 
-#' @return This function returns nothing. The de-duplicated version of the tableName overwrites the original
-#' version and is then used for all downstream processing.
+#' @return This function returns the de-duplicated version of the tableName as a data.frame, and also
+#' overwrites the original version of the file with this de-duplicated version for downstream processing.
 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -109,8 +109,14 @@ def.data.resolveDupes <- function(
         # Overwrite the raw data with a version that doesn't have duplicate samples.
         write.csv(externalData_noDupes, file = file.path(filepath, extFile))
 
-        print(paste0((numDupesRemaining / 2), " duplicate sample names removed"))
+        print(paste0((numDupesRemaining / 2), " additional duplicate sample names removed by analysis date sorting"))
 
+        return(externalData_noDupes)
+
+      } else{
+        write.csv(dataAfterDupeFlag, file = file.path(filepath, extFile))
+
+        return(dataAfterDupeFlag)
       }
 
     } else{
