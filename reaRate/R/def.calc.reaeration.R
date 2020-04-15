@@ -264,6 +264,11 @@ def.calc.reaeration <- function(
     x <- x[!is.infinite(y)]
     y <- y[!is.infinite(y)]
 
+    ## For debug
+    print(paste(" y is", y))
+    print(paste("minY is ", min(y), "and minY no NA is ", min(y, na.rm = TRUE)))
+    print(paste("maxY is ", max(y), "and maxY no NA is ", max(y, na.rm = TRUE)))
+
     try(outputDF$lossRateSF6[i] <- lineFit$coefficients[[2]], silent = T)
 
     if(plot == T){

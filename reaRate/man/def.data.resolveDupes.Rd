@@ -21,8 +21,8 @@ def.data.resolveDupes(
 \item{variablesFile}{a pub notebook read-in - temporary [data.frame]}
 }
 \value{
-This function returns nothing. The de-duplicated version of the tableName overwrites the original
-version and is then used for all downstream processing.
+This function returns the de-duplicated version of the tableName as a data.frame, and also
+overwrites the original version of the file with this de-duplicated version for downstream processing.
 }
 \description{
 This first runs the removeDups function in the neonOSbase package to remove duplicates

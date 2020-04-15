@@ -184,7 +184,8 @@ def.format.reaeration <- function(
   #Remove data for model type injections
   outputDF <- outputDF[outputDF$injectionType!="model"&!is.na(outputDF$injectionType),]
 
-  def.data.resolveDupes(filepath = filepath, tableName = "externalLabDataSalt", pubTableName = "rea_externalLabDataSalt_pub", variablesFile = variablesFile)
+  # This is a version of the data.frame with all duplicate measurements removed.
+  rea_externalLabDataSalt <- def.data.resolveDupes(filepath = filepath, tableName = "externalLabDataSalt", pubTableName = "rea_externalLabDataSalt_pub", variablesFile = variablesFile)
 
   QFile <- def.format.Q(dataDir = dataDir, site = site)
   QFile <- def.calc.Q.inj(QFile)
@@ -278,6 +279,12 @@ def.format.reaeration <- function(
         rea_externalLabDataSalt$startDate == startDate &
         grepl(repRegex, rea_externalLabDataSalt$saltSampleID)]
 
+    # new 041520
+    pSaltConc_sampleName <- rea_externalLabDataSalt$saltSampleID[
+      rea_externalLabDataSalt$namedLocation == station &
+        rea_externalLabDataSalt$startDate == startDate &
+        grepl(repRegex, rea_externalLabDataSalt$saltSampleID)]
+
     #Remove outliers TBD
     #Instead of calculating the mean, concatenate all values for plotting and assessment
     outputDF$plateauSaltConc[i] <- paste(pSaltConc, collapse = "|")
@@ -289,6 +296,27 @@ def.format.reaeration <- function(
       rea_externalLabDataGas$namedLocation == station &
         rea_externalLabDataGas$startDate == startDate &
         grepl(repRegex, rea_externalLabDataGas$gasSampleID)]
+
+    # new 041520
+    pGasConc_sampleName <- rea_externalLabDataGas$gasSampleID[
+      rea_externalLabDataGas$namedLocation == station &
+        rea_externalLabDataGas$startDate == startDate &
+        grepl(repRegex, rea_externalLabDataGas$gasSampleID)]
+
+    # new 041520
+    sampleRegex <- "[[:upper:]]{4}\\.[[:digit:]]{2}\\.[[:digit:]]{8}"
+    # Drop the .GAS and .TCR suffixes
+    pGasConc_sampleName_prefix <- regmatches(x = pGasConc_sampleName, regexpr(sampleRegex, pGasConc_sampleName))
+    pSaltConc_sampleName_prefix <-  regmatches(x = pSaltConc_sampleName, regexpr(sampleRegex, pSaltConc_sampleName))
+
+    names(pGasConc) <- pGasConc_sampleName_prefix
+    names(pSaltConc) <- pSaltConc_sampleName_prefix
+
+    # new 041520
+    # sort the pGasConc to match the names order of pSaltConc. If there are names in one that don't match the other,
+    # an NA entry is added in the gap.
+    pGasConc <- pGasConc[match(x = names(pSaltConc), table = names(pGasConc))]
+
 
     #Remove outliers TBD
     #Instead of calculating the mean, concatenate all values for plotting and assessment
