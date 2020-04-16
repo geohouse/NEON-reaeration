@@ -52,6 +52,8 @@
 #     original creation
 #   Kaelin M. Cawley (2018-05-03)
 #     added the option of getting data from the API rather than a file download
+#   Geoffrey L. House (2020-04-15)
+#     added gas and salt sample pairing by sample ID (ensures within-sample value normalization by def.calc.reaeration)
 ##############################################################################################
 def.format.reaeration <- function(
   dataDir = paste0(getwd(),"/NEON_reaeration.zip"),
