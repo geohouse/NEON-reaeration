@@ -398,7 +398,7 @@ def.calc.reaeration <- function(
              ylim = c(minY,maxY),
              ylab = "Conductivity, uS",
              xlab = "Time (UTC)")
-        mtext(paste0("Travel Time = ",outputDF$travelTime[i]," seconds, (",round(as.numeric(outputDF$travelTime[i])/60,digits=1) ," min)\n Click anywhere to close and continue"), cex = 1.2)
+        mtext(paste0("Station and site = ", currEventID, "\nTravel Time = ",outputDF$travelTime[i]," seconds, (",round(as.numeric(outputDF$travelTime[i])/60,digits=1) ," min)\n Click anywhere to close and continue"), cex = 1.2)
         points(as.POSIXct(s4LoggerData$dateTimeLogger[s4peakLoc$peakStart:s4peakLoc$peakEnd],format = dateFormat),
                s4YData,
                col = "blue")
@@ -412,7 +412,7 @@ def.calc.reaeration <- function(
            ylim = c(minY,maxY),
            ylab = "Conductivity, uS",
            xlab = "Time (UTC)")
-      mtext(paste0("Travel Time = ",outputDF$travelTime[i]," seconds, (",round(as.numeric(outputDF$travelTime[i])/60,digits=1) ," min)\n Click anywhere to close and continue"), cex = 1.2)
+      mtext(paste0("Station and site = ", currEventID, "\nTravel Time = ",outputDF$travelTime[i]," seconds, (",round(as.numeric(outputDF$travelTime[i])/60,digits=1) ," min)\n Click anywhere to close and continue"), cex = 1.2)
       points(as.POSIXct(s4LoggerData$dateTimeLogger[s4peakLoc$peakStart:s4peakLoc$peakEnd],format = dateFormat),
              s4YData,
              col = "blue")
