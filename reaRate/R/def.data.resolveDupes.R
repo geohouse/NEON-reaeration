@@ -15,8 +15,7 @@
 
 #' @param filepath The path to the directory containing the lab data to de-duplicate [string]
 #' @param tableName The name of the table in the file path directory to de-duplicate [string]
-#' @param pubTableName The name of the publication table to use to define the pub. table to use to define the primary keys used for de-duping [string]
-#' @param variablesFile a pub notebook read-in - temporary [data.frame]
+#' @param variablesFile The variables file read-in for de-duplicating [data.frame]
 
 #' @return This function returns the de-duplicated version of the tableName as a data.frame, and also
 #' overwrites the original version of the file with this de-duplicated version for downstream processing.
@@ -27,7 +26,7 @@
 #' @keywords surface water, streams, rivers, reaeration, gas transfer velocity, schmidt number
 
 #' @examples
-#' def.data.resolveDupes(filepath = "GitHub/NEON-reaeration/filesToStack20190/stackedFiles", tableName = "externalLabDataSalt")
+#' def.data.resolveDupes(filepath = "GitHub/NEON-reaeration/filesToStack20190/stackedFiles", tableName = "externalLabDataSalt", variablesFile = variablesDF)
 
 # changelog and author contributions / copyrights
 #   Geoffrey L. House (2020-04-10)
@@ -36,7 +35,6 @@
 def.data.resolveDupes <- function(
   filepath = "",
   tableName = "",
-  pubTableName = "",
   variablesFile = ""
 ) {
 
@@ -55,10 +53,6 @@ def.data.resolveDupes <- function(
     stop("No entry provided for 'tableName' within def.data.resolveDupes. Exiting.")
   }
 
-  if(pubTableName == ""){
-    stop("No entry provided for 'pubTableName' within def.data.resolveDupes. Exiting.")
-  }
-
   if(class(variablesFile) == "character"){
     stop("No entry provided for 'variablesFile' within def.data.resolveDupes. Exiting.")
   }
@@ -71,24 +65,7 @@ def.data.resolveDupes <- function(
       extFile <- allFiles[grepl(tableName, allFiles)]
       externalData <- read.csv(file.path(filepath, extFile), stringsAsFactors = F)
 
-      ## Re-try after re-transitions - fields that are missing in the inputData compared to the pub notebook.
-      missingFields <- setdiff(variablesFile$fieldName, names(externalData))
-
-      #print("the missing fields are:")
-      #print(missingFields)
-
-      # Fails initially with
-      # Error in neonOSbase::removeDups(data = inputData, variables = pubNotebook,  :
-      # Field names in data do not match variables file.
-      # test <- neonOSbase::removeDups(data = inputData, variables = pubNotebook, table = "rea_externalLabDataSalt_pub")
-
-      # remove the rows in the pub notebook that contain the field names missing from the inputData.
-      variablesFile_dropMissingInData <- variablesFile[!(variablesFile$fieldName %in% missingFields),]
-
-      # Need to remove the publication date column from the inputData so that all the fields match with the pub notebook.
-      externalData_v2 <- externalData[,names(externalData) != "publicationDate"]
-
-      dataAfterDupeFlag <- neonOSbase::removeDups(data = externalData_v2, variables = variablesFile_dropMissingInData, table = pubTableName)
+      dataAfterDupeFlag <- neonOSbase::removeDups(data = externalData, variables = variablesFile, table = tableName)
 
       numDupesRemaining <- sum(dataAfterDupeFlag$duplicateRecordQF == 2)
 
@@ -105,11 +82,10 @@ def.data.resolveDupes <- function(
         externalData_noDupes <- dataAfterDupeFlag_dateSorted[!duplicated(dataAfterDupeFlag_dateSorted$saltSampleID),]
         ## =============
 
-
         # Overwrite the raw data with a version that doesn't have duplicate samples.
         write.csv(externalData_noDupes, file = file.path(filepath, extFile))
 
-        print(paste0((numDupesRemaining / 2), " additional duplicate sample names removed by analysis date sorting"))
+        print(paste0(numDupesRemaining, " additional duplicate sample names removed by analysis date sorting"))
 
         return(externalData_noDupes)
 

@@ -64,12 +64,11 @@ reaDownloaded <- def.data.download(dataDir = dataDir, site = site, fieldQ = TRUE
 # portal download will have that information instead, and can therefore code the check internally without the extra variable being needed to pass to the function)
 
 # Download the pub notebook
-pubNotebook <- restR::get.pub.workbook(DPID = "DP1.20190.001", stack = "prod", table = "rea_externalLabDataSalt_pub")
+#pubNotebook <- restR::get.pub.workbook(DPID = "DP1.20190.001", stack = "prod", table = "rea_externalLabDataSalt_pub")
 
 # The fieldQ also downloads the stream discharge data.
 reaFormatted <- def.format.reaeration(dataDir = dataDir, site = site, fieldQ = TRUE,
-                                      filepath = reaDownloaded[1], qFilepath = reaDownloaded[2],
-                                      variablesFile = pubNotebook)
+                                      filepath = reaDownloaded[1], qFilepath = reaDownloaded[2])
 #write.csv(reaFormatted, "C:/Users/kcawley/Documents/GitHub/biogeochemistryIPT/reaeration/Science Only/rCodeForRelease/reaRate/inst/extdata/reaTestData.csv", row.names = F)
 #write.csv(condDataS1, "C:/Users/kcawley/Documents/GitHub/biogeochemistryIPT/reaeration/Science Only/rCodeForRelease/reaRate/inst/extdata/condDataS1.csv", row.names = F)
 
@@ -95,10 +94,18 @@ reaRatesCalc <- def.calc.reaeration(inputFile = reaFormatted,
 outputDF <- reaRatesCalc$outputDF
 inputFile <- reaRatesCalc$inputFile
 
+# Save the outputDF for later use if needed.
+currDate <- Sys.time()
+fileName <- paste0("reaOutputDFCalced_site_", site, "_made_0", month(currDate), day(currDate), year(currDate), ".rds")
+saveRDS(object = outputDF, file = file.path("/Users/housegl/Documents/REA/output_dataFrames", fileName))
+
+# Just for POSE comparisons
+#outputDF <- outputDF[1:18,]
+
 fig_test <- highlight_key(outputDF)
 
 fig_1 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ travelTime, marker = list(pch = 16, cex = 4, col = "blue"),
-                 text = ~paste("EventID: ", eventID), name = "Travel time") %>% layout(yaxis = list(title = "Travel time (s)"))
+                 text = ~paste("EventID: ", eventID), name = "Travel time") %>% layout(yaxis = list(title = "Travel time (s)"), xaxis = list(title = "Discharge (m^3/s)"))
 
 
 fig_2 <- plot_ly(data = fig_test, x = ~ meanQ, y = ~ lossRateSF6, marker = list(pch = 16, cex = 4, col = "blue"),

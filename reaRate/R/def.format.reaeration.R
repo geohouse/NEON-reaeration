@@ -21,7 +21,7 @@
 #' @param fieldQ specifies whether or no field discharge data should be included [boolean]
 #' @param filepath specifies the path to the downloaded and stacked rea data tables (DP1.20190.001) [string]
 #' @param qFilepath specifies the path to the downloaded and stacked discharge data tables (DP1.20048.001) [string]
-#' @param variablesFile TEMP. needed until primary key info. avail. in variables.csv public download. A downloaded pub workbook.
+#' @param variablesFileName specifies the path of the 'variables' csv file to use for de-duplicating the input data rows
 
 #' @return This function returns one data frame formatted for use with def.calc.reaeration.R
 
@@ -60,8 +60,7 @@ def.format.reaeration <- function(
   site = "all",
   fieldQ = FALSE,
   filepath = "",
-  qFilepath = "",
-  variablesFile = ""
+  qFilepath = ""
 ) {
 
   if(filepath == ""){
@@ -70,10 +69,6 @@ def.format.reaeration <- function(
 
   if(qFilepath == ""){
     stop("No entry provided for 'qFilepath' within def.format.reaeration. Exiting.")
-  }
-
-  if(class(variablesFile) == "character"){
-    stop("No entry provided for 'variablesFile' within def.format.reaeration. Exiting.")
   }
 
   #Read in stacked files
@@ -111,6 +106,10 @@ def.format.reaeration <- function(
     rea_widthFieldData <- read.csv(
       paste(filepath,"rea_widthFieldData.csv", sep = "/"),
       stringsAsFactors = F)
+
+    try(variablesFile <- read.csv(
+      paste(filepath,"variables_20190.csv", sep = "/"),
+      stringsAsFactors = F))
 
     # #This isn't used anywhere else
     # rea_conductivityFieldData <- read.csv(
@@ -187,7 +186,7 @@ def.format.reaeration <- function(
   outputDF <- outputDF[outputDF$injectionType!="model"&!is.na(outputDF$injectionType),]
 
   # This is a version of the data.frame with all duplicate measurements removed.
-  rea_externalLabDataSalt <- def.data.resolveDupes(filepath = filepath, tableName = "externalLabDataSalt", pubTableName = "rea_externalLabDataSalt_pub", variablesFile = variablesFile)
+  rea_externalLabDataSalt <- def.data.resolveDupes(filepath = filepath, tableName = "rea_externalLabDataSalt", variablesFile = variablesFile)
 
   QFile <- def.format.Q(dataDir = dataDir, site = site)
   QFile <- def.calc.Q.inj(QFile)
